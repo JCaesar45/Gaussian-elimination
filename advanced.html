@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Γ(x) | The Gamma Function Explorer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;300;400;600;800&family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --neon-cyan: #00f5ff;
+            --neon-pink: #ff00ff;
+            --neon-purple: #b300ff;
+            --neon-green: #00ff88;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --panel-bg: rgba(10, 10, 15, 0.85);
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--darker-bg);
+            color: #e0e0e0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        #quantum-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.6;
+        }
+        
+        .main-container {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+        }
+        
+        header {
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        .gamma-symbol {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 60px rgba(0, 245, 255, 0.5);
+            animation: gammaPulse 4s ease-in-out infinite;
+            display: inline-block;
+            position: relative;
+        }
+        
+        @keyframes gammaPulse {
+            0%, 100% { transform: scale(1); filter: hue-rotate(0deg); }
+            50% { transform: scale(1.05); filter: hue-rotate(30deg); }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--neon-cyan);
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            margin-top: -1rem;
+            opacity: 0.8;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .control-panel {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .control-panel::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-pink), var(--neon-purple));
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0.3;
+            animation: borderRotate 3s linear infinite;
+        }
+        
+        @keyframes borderRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-cyan);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .panel-title::before {
+            content: '▹';
+            color: var(--neon-pink);
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-label {
+            display: block;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .gamma-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 10px;
+            color: var(--neon-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .gamma-input:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+        }
+        
+        .slider-container {
+            margin: 1.5rem 0;
+        }
+        
+        .gamma-slider {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .gamma-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+            transition: transform 0.2s;
+        }
+        
+        .gamma-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        
+        .result-display {
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+        
+        .result-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--neon-green);
+            margin-top: 0.5rem;
+            word-break: break-all;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .visualization-panel {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            position: relative;
+        }
+        
+        #gamma-graph {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .graph-controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 8px;
+            color: var(--neon-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+        }
+        
+        .control-btn:hover {
+            background: rgba(0, 245, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .control-btn.active {
+            background: var(--neon-cyan);
+            color: var(--dark-bg);
+        }
+        
+        .math-display {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            border-left: 4px solid var(--neon-pink);
+        }
+        
+        .math-title {
+            color: var(--neon-pink);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 1rem;
+        }
+        
+        .math-formula {
+            font-size: 1.3rem;
+            color: #fff;
+            line-height: 1.8;
+        }
+        
+        .highlight {
+            color: var(--neon-cyan);
+            font-weight: 600;
+        }
+        
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .property-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .property-card:hover {
+            background: rgba(0, 245, 255, 0.05);
+            border-color: var(--neon-cyan);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 245, 255, 0.1);
+        }
+        
+        .property-name {
+            color: var(--neon-purple);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .property-value {
+            color: #fff;
+            font-size: 1.1rem;
+        }
+        
+        .code-section {
+            margin-top: 2rem;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .code-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .code-tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            color: #888;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .code-tab:hover {
+            color: #fff;
+        }
+        
+        .code-tab.active {
+            color: var(--neon-cyan);
+            border-bottom-color: var(--neon-cyan);
+            background: rgba(0, 245, 255, 0.05);
+        }
+        
+        .code-content {
+            padding: 1.5rem;
+            display: none;
+        }
+        
+        .code-content.active {
+            display: block;
+        }
+        
+        pre {
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .keyword { color: var(--neon-pink); }
+        .function { color: var(--neon-cyan); }
+        .number { color: var(--neon-green); }
+        .comment { color: #666; font-style: italic; }
+        .string { color: #ffaa00; }
+        
+        .terminal {
+            margin-top: 2rem;
+            background: #000;
+            border-radius: 10px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+        
+        .terminal-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .terminal-btn.red { background: #ff5f56; }
+        .terminal-btn.yellow { background: #ffbd2e; }
+        .terminal-btn.green { background: #27c93f; }
+        
+        .terminal-content {
+            color: var(--neon-green);
+            line-height: 1.8;
+        }
+        
+        .terminal-line {
+            opacity: 0;
+            animation: typeLine 0.5s forwards;
+        }
+        
+        @keyframes typeLine {
+            to { opacity: 1; }
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 18px;
+            background: var(--neon-green);
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .glitch {
+            position: relative;
+        }
+        
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch::before {
+            animation: glitch-1 2s infinite;
+            color: var(--neon-pink);
+            z-index: -1;
+        }
+        
+        .glitch::after {
+            animation: glitch-2 2s infinite;
+            color: var(--neon-cyan);
+            z-index: -2;
+        }
+        
+        @keyframes glitch-1 {
+            0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+            20% { clip-path: inset(20% 0 30% 0); transform: translate(-2px, 2px); }
+            40% { clip-path: inset(50% 0 20% 0); transform: translate(2px, -2px); }
+            60% { clip-path: inset(10% 0 60% 0); transform: translate(-2px, 0); }
+            80% { clip-path: inset(80% 0 5% 0); transform: translate(2px, 2px); }
+        }
+        
+        @keyframes glitch-2 {
+            0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -2px); }
+            40% { clip-path: inset(30% 0 40% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(10% 0 70% 0); transform: translate(2px, 0); }
+            80% { clip-path: inset(40% 0 30% 0); transform: translate(-2px, -2px); }
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 3s ease-out forwards;
+        }
+        
+        @keyframes particleFloat {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="quantum-canvas"></canvas>
+    
+    <div class="main-container">
+        <header>
+            <h1 class="gamma-symbol glitch" data-text="Γ(x)">Γ(x)</h1>
+            <p class="subtitle">The Gamma Function Explorer</p>
+        </header>
+        
+        <div class="container">
+            <div class="control-panel">
+                <h2 class="panel-title">Input Parameters</h2>
+                
+                <div class="input-group">
+                    <label class="input-label">X Value</label>
+                    <input type="number" class="gamma-input" id="xInput" value="0.5" step="0.1" min="0.1" max="10">
+                </div>
+                
+                <div class="slider-container">
+                    <label class="input-label">Adjust Value</label>
+                    <input type="range" class="gamma-slider" id="xSlider" min="0.1" max="10" step="0.01" value="0.5">
+                </div>
+                
+                <div class="result-display">
+                    <div class="result-label">Gamma Result</div>
+                    <div class="result-value" id="result">1.7724538509055159</div>
+                </div>
+                
+                <div class="math-display">
+                    <div class="math-title">Lanczos Approximation</div>
+                    <div class="math-formula">
+                        Γ(z+1) ≈ <span class="highlight">√(2π)</span> · (z + g + <span class="highlight">½</span>)^(z+<span class="highlight">½</span>) · e^-(z+g+<span class="highlight">½</span>) · A(z)
+                    </div>
+                </div>
+                
+                <div class="properties-grid">
+                    <div class="property-card" onclick="setX(0.5)">
+                        <div class="property-name">Γ(½)</div>
+                        <div class="property-value">√π ≈ 1.77245</div>
+                    </div>
+                    <div class="property-card" onclick="setX(1)">
+                        <div class="property-name">Γ(1)</div>
+                        <div class="property-value">0! = 1</div>
+                    </div>
+                    <div class="property-card" onclick="setX(2)">
+                        <div class="property-name">Γ(2)</div>
+                        <div class="property-value">1! = 1</div>
+                    </div>
+                    <div class="property-card" onclick="setX(5)">
+                        <div class="property-name">Γ(5)</div>
+                        <div class="property-value">4! = 24</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization-panel">
+                <h2 class="panel-title">Real-Time Visualization</h2>
+                <canvas id="gamma-graph"></canvas>
+                
+                <div class="graph-controls">
+                    <button class="control-btn active" onclick="setRange(0, 5)">0-5</button>
+                    <button class="control-btn" onclick="setRange(0, 10)">0-10</button>
+                    <button class="control-btn" onclick="setRange(-5, 5)">-5 to 5</button>
+                    <button class="control-btn" onclick="toggleAnimation()">Animate</button>
+                </div>
+                
+                <div class="code-section">
+                    <div class="code-tabs">
+                        <div class="code-tab active" onclick="switchTab('js')">JavaScript</div>
+                        <div class="code-tab" onclick="switchTab('py')">Python</div>
+                        <div class="code-tab" onclick="switchTab('java')">Java</div>
+                    </div>
+                    
+                    <div class="code-content active" id="js-code">
+                        <pre><code><span class="keyword">function</span> <span class="function">gamma</span>(x) {
+    <span class="keyword">const</span> g = <span class="number">7</span>;
+    <span class="keyword">const</span> p = [
+        <span class="number">0.99999999999980993</span>,
+        <span class="number">676.5203681218851</span>,
+        <span class="number">-1259.1392167224028</span>,
+        <span class="number">771.32342877765313</span>,
+        <span class="number">-176.61502916214059</span>,
+        <span class="number">12.507343278686905</span>,
+        <span class="number">-0.13857109526572012</span>,
+        <span class="number">9.9843695780195716e-6</span>,
+        <span class="number">1.5056327351493116e-7</span>
+    ];
+    
+    <span class="keyword">if</span> (x < <span class="number">0.5</span>) {
+        <span class="keyword">return</span> Math.PI / (Math.sin(Math.PI * x) * gamma(<span class="number">1</span> - x));
+    }
+    
+    x -= <span class="number">1</span>;
+    <span class="keyword">let</span> a = p[<span class="number">0</span>];
+    <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">1</span>; i < p.length; i++) {
+        a += p[i] / (x + i);
+    }
+    
+    <span class="keyword">const</span> t = x + g + <span class="number">0.5</span>;
+    <span class="keyword">return</span> Math.sqrt(<span class="number">2</span> * Math.PI) * Math.pow(t, x + <span class="number">0.5</span>) * 
+           Math.exp(-t) * a;
+}</code></pre>
+                    </div>
+                    
+                    <div class="code-content" id="py-code">
+                        <pre><code><span class="keyword">import</span> math
+
+<span class="keyword">def</span> <span class="function">gamma</span>(x):
+    g = <span class="number">7</span>
+    p = [
+        <span class="number">0.99999999999980993</span>,
+        <span class="number">676.5203681218851</span>,
+        <span class="number">-1259.1392167224028</span>,
+        <span class="number">771.32342877765313</span>,
+        <span class="number">-176.61502916214059</span>,
+        <span class="number">12.507343278686905</span>,
+        <span class="number">-0.13857109526572012</span>,
+        <span class="number">9.9843695780195716e-6</span>,
+        <span class="number">1.5056327351493116e-7</span>
+    ]
+    
+    <span class="keyword">if</span> x < <span class="number">0.5</span>:
+        <span class="keyword">return</span> math.pi / (math.sin(math.pi * x) * gamma(<span class="number">1</span> - x))
+    
+    x -= <span class="number">1</span>
+    a = p[<span class="number">0</span>]
+    <span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>, len(p)):
+        a += p[i] / (x + i)
+    
+    t = x + g + <span class="number">0.5</span>
+    <span class="keyword">return</span> math.sqrt(<span class="number">2</span> * math.pi) * (t ** (x + <span class="number">0.5</span>)) * \
+           math.exp(-t) * a</code></pre>
+                    </div>
+                    
+                    <div class="code-content" id="java-code">
+                        <pre><code><span class="keyword">public static double</span> <span class="function">gamma</span>(<span class="keyword">double</span> x) {
+    <span class="keyword">final double</span>[] P = {
+        <span class="number">0.99999999999980993</span>,
+        <span class="number">676.5203681218851</span>,
+        <span class="number">-1259.1392167224028</span>,
+        <span class="number">771.32342877765313</span>,
+        <span class="number">-176.61502916214059</span>,
+        <span class="number">12.507343278686905</span>,
+        <span class="number">-0.13857109526572012</span>,
+        <span class="number">9.9843695780195716e-6</span>,
+        <span class="number">1.5056327351493116e-7</span>
+    };
+    
+    <span class="keyword">if</span> (x < <span class="number">0.5</span>) {
+        <span class="keyword">return</span> Math.PI / (Math.sin(Math.PI * x) * 
+               gamma(<span class="number">1</span> - x));
+    }
+    
+    x -= <span class="number">1</span>;
+    <span class="keyword">double</span> a = P[<span class="number">0</span>];
+    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i < P.length; i++) {
+        a += P[i] / (x + i);
+    }
+    
+    <span class="keyword">double</span> t = x + <span class="number">7</span> + <span class="number">0.5</span>;
+    <span class="keyword">return</span> Math.sqrt(<span class="number">2</span> * Math.PI) * Math.pow(t, x + <span class="number">0.5</span>) * 
+           Math.exp(-t) * a;
+}</code></pre>
+                    </div>
+                </div>
+                
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-btn red"></div>
+                        <div class="terminal-btn yellow"></div>
+                        <div class="terminal-btn green"></div>
+                    </div>
+                    <div class="terminal-content" id="terminal">
+                        <div class="terminal-line">$ gamma --compute 0.1</div>
+                        <div class="terminal-line">Result: 9.513507698668736</div>
+                        <div class="terminal-line">$ gamma --compute 0.5</div>
+                        <div class="terminal-line">Result: 1.7724538509055159</div>
+                        <div class="terminal-line">$ gamma --visualize --range 0,10</div>
+                        <div class="terminal-line">Rendering gamma curve... <span class="cursor"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Built with precision mathematics | Lanczos Approximation Algorithm</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem;">Γ(x+1) = x·Γ(x) | Γ(n) = (n-1)! for positive integers</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Gamma Function Implementation
+        const gamma = (function() {
+            const g = 7;
+            const p = [
+                0.99999999999980993,
+                676.5203681218851,
+                -1259.1392167224028,
+                771.32342877765313,
+                -176.61502916214059,
+                12.507343278686905,
+                -0.13857109526572012,
+                9.9843695780195716e-6,
+                1.5056327351493116e-7
+            ];
+            
+            return function gamma(x) {
+                if (x < 0.5) {
+                    return Math.PI / (Math.sin(Math.PI * x) * gamma(1 - x));
+                }
+                
+                x -= 1;
+                let a = p[0];
+                for (let i = 1; i < p.length; i++) {
+                    a += p[i] / (x + i);
+                }
+                
+                const t = x + g + 0.5;
+                return Math.sqrt(2 * Math.PI) * Math.pow(t, x + 0.5) * Math.exp(-t) * a;
+            };
+        })();
+        
+        // UI Elements
+        const xInput = document.getElementById('xInput');
+        const xSlider = document.getElementById('xSlider');
+        const resultDisplay = document.getElementById('result');
+        const graphCanvas = document.getElementById('gamma-graph');
+        const ctx = graphCanvas.getContext('2d');
+        
+        // State
+        let graphRange = { min: 0, max: 5 };
+        let isAnimating = false;
+        let animationId = null;
+        
+        // Resize canvas
+        function resizeCanvas() {
+            const rect = graphCanvas.parentElement.getBoundingClientRect();
+            graphCanvas.width = rect.width - 60;
+            graphCanvas.height = 400;
+            drawGraph();
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Update result
+        function updateResult() {
+            const x = parseFloat(xInput.value);
+            if (x > 0) {
+                const result = gamma(x);
+                resultDisplay.textContent = result.toFixed(16);
+                createParticles(event);
+            }
+        }
+        
+        // Input synchronization
+        xInput.addEventListener('input', () => {
+            xSlider.value = xInput.value;
+            updateResult();
+        });
+        
+        xSlider.addEventListener('input', () => {
+            xInput.value = xSlider.value;
+            updateResult();
+        });
+        
+        // Set X value from property cards
+        function setX(value) {
+            xInput.value = value;
+            xSlider.value = value;
+            updateResult();
+            
+            // Visual feedback
+            resultDisplay.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                resultDisplay.style.transform = 'scale(1)';
+            }, 200);
+        }
+        
+        // Graph drawing
+        function drawGraph() {
+            const width = graphCanvas.width;
+            const height = graphCanvas.height;
+            const padding = 40;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Grid
+            ctx.strokeStyle = 'rgba(0, 245, 255, 0.1)';
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= 10; i++) {
+                const x = padding + (i / 10) * (width - 2 * padding);
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, height - padding);
+                ctx.stroke();
+            }
+            
+            for (let i = 0; i <= 8; i++) {
+                const y = padding + (i / 8) * (height - 2 * padding);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+            
+            // Axes
+            ctx.strokeStyle = 'rgba(0, 245, 255, 0.5)';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.stroke();
+            
+            // Gamma curve
+            ctx.strokeStyle = '#00f5ff';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00f5ff';
+            ctx.beginPath();
+            
+            const range = graphRange.max - graphRange.min;
+            let first = true;
+            
+            for (let px = 0; px <= width - 2 * padding; px++) {
+                const x = graphRange.min + (px / (width - 2 * padding)) * range;
+                
+                if (x <= 0) continue;
+                
+                let y;
+                try {
+                    y = gamma(x);
+                    if (!isFinite(y) || y > 100 || y < -10) continue;
+                } catch (e) {
+                    continue;
+                }
+                
+                const graphHeight = height - 2 * padding;
+                const py = height - padding - (y / 10) * graphHeight;
+                
+                if (first) {
+                    ctx.moveTo(padding + px, py);
+                    first = false;
+                } else {
+                    ctx.lineTo(padding + px, py);
+                }
+            }
+            
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Current point
+            const currentX = parseFloat(xInput.value);
+            if (currentX >= graphRange.min && currentX <= graphRange.max && currentX > 0) {
+                const px = ((currentX - graphRange.min) / range) * (width - 2 * padding);
+                const currentY = gamma(currentX);
+                const py = height - padding - (currentY / 10) * (height - 2 * padding);
+                
+                ctx.fillStyle = '#ff00ff';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ff00ff';
+                ctx.beginPath();
+                ctx.arc(padding + px, py, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                // Label
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px JetBrains Mono';
+                ctx.fillText(`(${currentX.toFixed(2)}, ${currentY.toFixed(2)})`, padding + px + 15, py - 15);
+            }
+            
+            // Axis labels
+            ctx.fillStyle = '#888';
+            ctx.font = '11px JetBrains Mono';
+            ctx.textAlign = 'center';
+            
+            for (let i = 0; i <= 5; i++) {
+                const x = graphRange.min + (i / 5) * range;
+                const px = padding + (i / 5) * (width - 2 * padding);
+                ctx.fillText(x.toFixed(1), px, height - padding + 20);
+            }
+        }
+        
+        // Range controls
+        function setRange(min, max) {
+            graphRange = { min, max };
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            drawGraph();
+        }
+        
+        // Animation
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            const btn = event.target;
+            
+            if (isAnimating) {
+                btn.classList.add('active');
+                btn.textContent = 'Stop';
+                let t = 0.1;
+                
+                function animate() {
+                    if (!isAnimating) return;
+                    t += 0.02;
+                    if (t > 10) t = 0.1;
+                    
+                    xInput.value = t.toFixed(2);
+                    xSlider.value = t;
+                    updateResult();
+                    drawGraph();
+                    
+                    animationId = requestAnimationFrame(animate);
+                }
+                
+                animate();
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = 'Animate';
+                cancelAnimationFrame(animationId);
+            }
+        }
+        
+        // Tab switching
+        function switchTab(lang) {
+            document.querySelectorAll('.code-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.code-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(lang + '-code').classList.add('active');
+        }
+        
+        // Particle effects
+        function createParticles(e) {
+            if (!e) return;
+            const rect = resultDisplay.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.setProperty('--tx', (Math.random() - 0.5) * 200 + 'px');
+                particle.style.setProperty('--ty', (Math.random() - 0.5) * 200 + 'px');
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 3000);
+            }
+        }
+        
+        // Background quantum field
+        const quantumCanvas = document.getElementById('quantum-canvas');
+        const qCtx = quantumCanvas.getContext('2d');
+        
+        function initQuantumField() {
+            quantumCanvas.width = window.innerWidth;
+            quantumCanvas.height = window.innerHeight;
+            
+            const particles = [];
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * quantumCanvas.width,
+                    y: Math.random() * quantumCanvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    radius: Math.random() * 2 + 1
+                });
+            }
+            
+            function animateQuantum() {
+                qCtx.clearRect(0, 0, quantumCanvas.width, quantumCanvas.height);
+                
+                particles.forEach((p, i) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    if (p.x < 0 || p.x > quantumCanvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > quantumCanvas.height) p.vy *= -1;
+                    
+                    qCtx.beginPath();
+                    qCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    qCtx.fillStyle = 'rgba(0, 245, 255, 0.5)';
+                    qCtx.fill();
+                    
+                    // Connections
+                    particles.slice(i + 1).forEach(p2 => {
+                        const dx = p.x - p2.x;
+                        const dy = p.y - p2.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < 150) {
+                            qCtx.beginPath();
+                            qCtx.moveTo(p.x, p.y);
+                            qCtx.lineTo(p2.x, p2.y);
+                            qCtx.strokeStyle = `rgba(0, 245, 255, ${0.2 * (1 - dist / 150)})`;
+                            qCtx.lineWidth = 0.5;
+                            qCtx.stroke();
+                        }
+                    });
+                });
+                
+                requestAnimationFrame(animateQuantum);
+            }
+            
+            animateQuantum();
+        }
+        
+        // Terminal typing effect
+        function addTerminalLine(text) {
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.textContent = text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            initQuantumField();
+            updateResult();
+            
+            // Periodic terminal updates
+            setInterval(() => {
+                const messages = [
+                    '$ gamma --status active',
+                    '$ monitoring input stream...',
+                    '$ Lanczos approximation: stable',
+                    '$ precision: 1e-15',
+                    '$ cache hit: 99.9%'
+                ];
+                addTerminalLine(messages[Math.floor(Math.random() * messages.length)]);
+            }, 5000);
+        });
+        
+        // Mouse trail effect
+        document.addEventListener('mousemove', (e) => {
+            if (Math.random() > 0.9) {
+                const trail = document.createElement('div');
+                trail.style.position = 'fixed';
+                trail.style.left = e.clientX + 'px';
+                trail.style.top = e.clientY + 'px';
+                trail.style.width = '4px';
+                trail.style.height = '4px';
+                trail.style.background = 'rgba(0, 245, 255, 0.8)';
+                trail.style.borderRadius = '50%';
+                trail.style.pointerEvents = 'none';
+                trail.style.zIndex = '9999';
+                document.body.appendChild(trail);
+                
+                setTimeout(() => {
+                    trail.style.transition = 'all 1s';
+                    trail.style.transform = 'scale(0)';
+                    trail.style.opacity = '0';
+                    setTimeout(() => trail.remove(), 1000);
+                }, 50);
+            }
+        });
+    </script>
+</body>
+</html>
